@@ -44,6 +44,7 @@ ARTIQ-9 (Unreleased)
       * DRCTRL
       * DRHOLD
       * ATT_EN
+* Optional SSL support with mutual certificate authentication was added between master, clients and controller managers.
 
 ARTIQ-8
 -------
