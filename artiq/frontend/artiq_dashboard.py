@@ -250,7 +250,8 @@ def main():
     d_waveform = waveform.WaveformDock(
         args.analyzer_proxy_timeout,
         args.analyzer_proxy_timer,
-        args.analyzer_proxy_timer_backoff
+        args.analyzer_proxy_timer_backoff,
+        ssl_config
     )
     atexit_register_coroutine(d_waveform.stop, loop=loop)
 
@@ -292,7 +293,7 @@ def main():
         d_waveform.init_ddb(ddb)
         return ddb
     devices_sub = Subscriber("devices", init_cbs, [d_ttl_dds.dm.notify_ddb, d_waveform.notify_ddb])
-    loop.run_until_complete(devices_sub.connect(args.server, args.port_notify))
+    loop.run_until_complete(devices_sub.connect(args.server, args.port_notify, None, ssl_config))
     atexit_register_coroutine(devices_sub.close, loop=loop)
 
     smgr.start(loop=loop)
