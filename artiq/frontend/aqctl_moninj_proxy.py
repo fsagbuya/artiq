@@ -6,7 +6,7 @@ import asyncio
 import struct
 from enum import Enum
 
-from sipyco.tools import AsyncioServer, SignalHandler
+from sipyco.tools import AsyncioServer, SignalHandler, SimpleSSLConfig
 from sipyco.pc_rpc import Server
 from sipyco import common_args
 
@@ -181,8 +181,8 @@ def get_argparser():
     common_args.verbosity_args(parser)
     common_args.simple_network_args(parser, [
         ("proxy", "proxying", 1383),
-        ("control", "control", 1384)
-    ])
+        ("control", "control", 1384)],
+        ssl=True)
     parser.add_argument("core_addr", metavar="CORE_ADDR",
                         help="hostname or IP address of the core device")
     return parser
@@ -199,6 +199,10 @@ def main():
 
     bind_address = common_args.bind_address_from_args(args)
 
+    ssl_config = None
+    if args.ssl:
+        ssl_config = SimpleSSLConfig(*args.ssl)
+
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
     try:
@@ -213,10 +217,10 @@ def main():
             loop.run_until_complete(comm_moninj.connect(args.core_addr))
             try:
                 proxy_server = ProxyServer(monitor_mux)
-                loop.run_until_complete(proxy_server.start(bind_address, args.port_proxy))
+                loop.run_until_complete(proxy_server.start(bind_address, args.port_proxy, ssl_config))
                 try:
                     server = Server({"moninj_proxy": PingTarget()}, None, True)
-                    loop.run_until_complete(server.start(bind_address, args.port_control))
+                    loop.run_until_complete(server.start(bind_address, args.port_control, ssl_config))
                     try:
                         _, pending = loop.run_until_complete(asyncio.wait(
                             [loop.create_task(signal_handler.wait_terminate()),
