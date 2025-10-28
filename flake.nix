@@ -507,8 +507,12 @@
           export QT_PLUGIN_PATH=${qtPaths.QT_PLUGIN_PATH}
           export QML2_IMPORT_PATH=${qtPaths.QML2_IMPORT_PATH}
           export PYTHONPATH=`git rev-parse --show-toplevel`:$PYTHONPATH
+          python -c "import artiq"
+          echo "================="
+          python -c "import artiq" 2>/dev/null
+          echo "================="
           if ! python -c "import artiq"; then
-            echo "WARNING: ARTIQ not available in PYTHONPATH."
+            echo "WARNING: ARTIQ not available in PYTHONPATH. HAHA"
             echo "For remote development, use 'nix develop git+https://github.com/m-labs/artiq.git#boards' instead"
           fi
         '';
