@@ -485,7 +485,7 @@
             python3Packages.sphinx-argparse
             python3Packages.sphinxcontrib-tikz
             python3Packages.sphinxcontrib-wavedrom
-            python3Packages.sphinx_rtd_theme
+            # python3Packages.sphinx_rtd_theme
 
             (python3.withPackages (ps: [migen misoc microscope ps.packaging ps.paramiko] ++ artiq.propagatedBuildInputs))
           ]
