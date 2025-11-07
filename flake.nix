@@ -184,10 +184,10 @@
         ++ pkgs.lib.optionals (!withMinimalDeps) [
           pkgs.llvm_20 pkgs.lld_20 pythonparser pkgs.qt6.qtsvg
           artiq-comtools.packages.x86_64-linux.artiq-comtools
-        ] 
+        ]
         ++ (with pkgs.python3Packages; pkgs.lib.optionals (!withMinimalDeps) [
-          llvmlite pyqtgraph pygit2 numpy python-dateutil scipy prettytable 
-          pyserial levenshtein h5py pyqt6 qasync tqdm lmdb platformdirs   
+          llvmlite pyqtgraph pygit2 numpy python-dateutil scipy prettytable
+          pyserial levenshtein h5py pyqt6 qasync tqdm lmdb platformdirs
         ]);
 
         dontWrapQtApps = true;
