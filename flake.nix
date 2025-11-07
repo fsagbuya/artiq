@@ -179,7 +179,10 @@
           pkgs.qt6.wrapQtAppsHook
         ];
         propagatedBuildInputs = [
-          pkgs.llvm_20 pkgs.lld_20 sipyco.packages.x86_64-linux.sipyco pythonparser
+          # pkgs.llvm_20
+          # pkgs.lld_20
+          # sipyco.packages.x86_64-linux.sipyco
+          # pythonparser
         ]
         # ++ (with pkgs.python3Packages;[
         #   numpy
