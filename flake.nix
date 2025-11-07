@@ -184,14 +184,15 @@
           sipyco.packages.x86_64-linux.sipyco
           # pythonparser
         ]
-        # ++ (with pkgs.python3Packages;[
-        #   numpy
-        # ])
+        ++ (with pkgs.python3Packages;[
+          # numpy
+          jsonschema
+        ])
         ++ pkgs.lib.optionals (!withMinimalDeps) [
           pkgs.qt6.qtsvg
           artiq-comtools.packages.x86_64-linux.artiq-comtools
         ] ++ (with pkgs.python3Packages; pkgs.lib.optionals (!withMinimalDeps) [
-          pyqtgraph pygit2 python-dateutil prettytable pyqt6 qasync tqdm levenshtein h5py lmdb platformdirs llvmlite scipy jsonschema pyserial
+          pyqtgraph pygit2 python-dateutil prettytable pyqt6 qasync tqdm levenshtein h5py lmdb platformdirs llvmlite scipy pyserial
         ]);
 
         dontWrapQtApps = true;
