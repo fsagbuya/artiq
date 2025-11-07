@@ -179,20 +179,15 @@
           pkgs.qt6.wrapQtAppsHook
         ];
         propagatedBuildInputs = [
-          # pkgs.llvm_20
-          # pkgs.lld_20
-          sipyco.packages.x86_64-linux.sipyco
-          # pythonparser
+          sipyco.packages.x86_64-linux.sipyco pkgs.python3Packages.jsonschema
         ]
-        ++ (with pkgs.python3Packages;[
-          # numpy
-          jsonschema
-        ])
         ++ pkgs.lib.optionals (!withMinimalDeps) [
-          pkgs.qt6.qtsvg
+          pkgs.llvm_20 pkgs.lld_20 pythonparser pkgs.qt6.qtsvg
           artiq-comtools.packages.x86_64-linux.artiq-comtools
-        ] ++ (with pkgs.python3Packages; pkgs.lib.optionals (!withMinimalDeps) [
-          pyqtgraph pygit2 python-dateutil prettytable pyqt6 qasync tqdm levenshtein h5py lmdb platformdirs llvmlite scipy pyserial
+        ] 
+        ++ (with pkgs.python3Packages; pkgs.lib.optionals (!withMinimalDeps) [
+          llvmlite pyqtgraph pygit2 numpy python-dateutil scipy prettytable 
+          pyserial levenshtein h5py pyqt6 qasync tqdm lmdb platformdirs   
         ]);
 
         dontWrapQtApps = true;
