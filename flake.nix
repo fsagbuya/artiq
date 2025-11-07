@@ -180,14 +180,15 @@
         ];
         propagatedBuildInputs = [
           pkgs.llvm_20 pkgs.lld_20 sipyco.packages.x86_64-linux.sipyco pythonparser
-        ] ++ (with pkgs.python3Packages;[
-          llvmlite numpy scipy pyserial levenshtein h5py lmdb jsonschema platformdirs
-        ])
+        ]
+        # ++ (with pkgs.python3Packages;[
+        #   numpy
+        # ])
         ++ pkgs.lib.optionals (!withMinimalDeps) [
           pkgs.qt6.qtsvg
           artiq-comtools.packages.x86_64-linux.artiq-comtools
         ] ++ (with pkgs.python3Packages; pkgs.lib.optionals (!withMinimalDeps) [
-          pyqtgraph pygit2 python-dateutil prettytable pyqt6 qasync tqdm
+          pyqtgraph pygit2 python-dateutil prettytable pyqt6 qasync tqdm levenshtein h5py lmdb platformdirs llvmlite scipy jsonschema pyserial
         ]);
 
         dontWrapQtApps = true;
