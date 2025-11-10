@@ -162,75 +162,70 @@
       '';
     };
 
-    makeArtiqPackage = { withMinimalDeps ? false }:
-      pkgs.python3Packages.buildPythonPackage rec {
-        pname = "artiq";
-        version = artiqVersion;
-        src = self;
-        pyproject = true;
-        build-system = [pkgs.python3Packages.setuptools];
+    artiq = pkgs.python3Packages.buildPythonPackage rec {
+      pname = "artiq";
+      version = artiqVersion;
+      src = self;
+      pyproject = true;
+      build-system = [pkgs.python3Packages.setuptools];
 
-        preBuild = ''
-          export VERSIONEER_OVERRIDE=${version}
-          export VERSIONEER_REV=${artiqRev}
-        '';
+      preBuild = ''
+        export VERSIONEER_OVERRIDE=${version}
+        export VERSIONEER_REV=${artiqRev}
+      '';
 
-        nativeBuildInputs = pkgs.lib.optionals (!withMinimalDeps) [
-          pkgs.qt6.wrapQtAppsHook
-        ];
-        propagatedBuildInputs = [
-          sipyco.packages.x86_64-linux.sipyco pkgs.python3Packages.jsonschema
-        ]
-        ++ pkgs.lib.optionals (!withMinimalDeps) [
-          pkgs.llvm_20 pkgs.lld_20 pythonparser pkgs.qt6.qtsvg
-          artiq-comtools.packages.x86_64-linux.artiq-comtools
-        ]
-        ++ (with pkgs.python3Packages; pkgs.lib.optionals (!withMinimalDeps) [
-          llvmlite pyqtgraph pygit2 numpy python-dateutil scipy prettytable
-          pyserial levenshtein h5py pyqt6 qasync tqdm lmdb platformdirs
-        ]);
+      nativeBuildInputs = [pkgs.qt6.wrapQtAppsHook];
+      propagatedBuildInputs =
+        [pkgs.llvm_20 pkgs.lld_20 sipyco.packages.x86_64-linux.sipyco pythonparser pkgs.qt6.qtsvg artiq-comtools.packages.x86_64-linux.artiq-comtools]
+        ++ (with pkgs.python3Packages; [llvmlite pyqtgraph pygit2 numpy python-dateutil scipy prettytable pyserial levenshtein h5py pyqt6 qasync tqdm lmdb jsonschema platformdirs]);
 
-        dontWrapQtApps = true;
-        postFixup = pkgs.lib.optionalString (!withMinimalDeps) ''
-          wrapQtApp "$out/bin/artiq_dashboard"
-          wrapQtApp "$out/bin/artiq_browser"
-          wrapQtApp "$out/bin/artiq_session"
-        '';
+      dontWrapQtApps = true;
+      postFixup = ''
+        wrapQtApp "$out/bin/artiq_dashboard"
+        wrapQtApp "$out/bin/artiq_browser"
+        wrapQtApp "$out/bin/artiq_session"
+      '';
 
-        preFixup = pkgs.lib.optionalString (!withMinimalDeps) ''
-          # Ensure that wrapProgram uses makeShellWrapper rather than makeBinaryWrapper
-          # brought in by wrapQtAppsHook. Only makeShellWrapper supports --run.
-          wrapProgram() { wrapProgramShell "$@"; }
-        '';
-        ## Modifies PATH to pass the wrapped python environment (i.e. python3.withPackages(...) to subprocesses.
-        ## Allows subprocesses using python to find all packages you have installed
-        makeWrapperArgs = pkgs.lib.optionals (!withMinimalDeps) [
-          ''--run 'if [ ! -z "$NIX_PYTHONPREFIX" ]; then export PATH=$NIX_PYTHONPREFIX/bin:$PATH;fi' ''
-          "--set FONTCONFIG_FILE ${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
-        ];
+      preFixup = ''
+        # Ensure that wrapProgram uses makeShellWrapper rather than makeBinaryWrapper
+        # brought in by wrapQtAppsHook. Only makeShellWrapper supports --run.
+        wrapProgram() { wrapProgramShell "$@"; }
+      '';
+      ## Modifies PATH to pass the wrapped python environment (i.e. python3.withPackages(...) to subprocesses.
+      ## Allows subprocesses using python to find all packages you have installed
+      makeWrapperArgs = [
+        ''--run 'if [ ! -z "$NIX_PYTHONPREFIX" ]; then export PATH=$NIX_PYTHONPREFIX/bin:$PATH;fi' ''
+        "--set FONTCONFIG_FILE ${pkgs.fontconfig.out}/etc/fonts/fonts.conf"
+      ];
 
-        dontCheckRuntimeDeps = withMinimalDeps;
-        # FIXME: automatically propagate lld_20 llvm_20 dependencies
-        # cacert is required in the check stage only, as certificates are to be
-        # obtained from system elsewhere
-        nativeCheckInputs = pkgs.lib.optionals (!withMinimalDeps) [
-          pkgs.lld_20 pkgs.llvm_20 pkgs.lit pkgs.outputcheck pkgs.cacert libartiq-support
-        ];
-        checkPhase = pkgs.lib.optionalString (!withMinimalDeps) ''
-          python -m unittest discover -v artiq.test
+      # FIXME: automatically propagate lld_20 llvm_20 dependencies
+      # cacert is required in the check stage only, as certificates are to be
+      # obtained from system elsewhere
+      nativeCheckInputs = with pkgs; [lld_20 llvm_20 lit outputcheck cacert] ++ [libartiq-support];
+      checkPhase = ''
+        python -m unittest discover -v artiq.test
 
-          TESTDIR=`mktemp -d`
-          cp --no-preserve=mode,ownership -R $src/artiq/test/lit $TESTDIR
-          LIBARTIQ_SUPPORT=`libartiq-support` lit -v $TESTDIR/lit
-        '';
-      };
-
-    artiq = makeArtiqPackage {};
-
-    # Stripped down version of ARTIQ for gateware/firmware builds
-    artiq-build = makeArtiqPackage {
-      withMinimalDeps = true;
+        TESTDIR=`mktemp -d`
+        cp --no-preserve=mode,ownership -R $src/artiq/test/lit $TESTDIR
+        LIBARTIQ_SUPPORT=`libartiq-support` lit -v $TESTDIR/lit
+      '';
     };
+
+    artiq-build = artiq.overridePythonAttrs (oa: {
+      nativeBuildInputs = [];
+      propagatedBuildInputs = [sipyco.packages.x86_64-linux.sipyco pkgs.python3Packages.jsonschema];
+      dontFixup = true;
+      dontCheckRuntimeDeps = true;
+      doInstallCheck = false;
+      doCheck = false;
+    });
+
+    # artiq-build = pkgs.python3Packages.buildPythonPackage rec {
+    #   inherit (artiq) version src pyproject build-system preBuild dontWrapQtApps;
+    #   pname = "artiq-build";
+    #   propagatedBuildInputs = [sipyco.packages.x86_64-linux.sipyco pkgs.python3Packages.jsonschema];
+    #   dontCheckRuntimeDeps = true;
+    # };
 
     migen = pkgs.python3Packages.buildPythonPackage rec {
       name = "migen";
@@ -299,7 +294,7 @@
         additionalCargoLock = "${rust}/lib/rustlib/src/rust/Cargo.lock";
         singleStep = true;
         nativeBuildInputs = [
-          (pkgs.python3.withPackages (ps: [migen misoc artiq ps.packaging]))
+          (pkgs.python3.withPackages (ps: [migen misoc artiq-build ps.packaging]))
           rust
           pkgs.llvm_20
           pkgs.lld_20
