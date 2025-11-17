@@ -503,6 +503,7 @@
             packages.x86_64-linux.openocd-bscanspi
           ];
         shellHook = ''
+          pwd
           export LIBARTIQ_SUPPORT=`libartiq-support`
           export QT_PLUGIN_PATH=${qtPaths.QT_PLUGIN_PATH}
           export QML2_IMPORT_PATH=${qtPaths.QML2_IMPORT_PATH}
